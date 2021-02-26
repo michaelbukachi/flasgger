@@ -1016,3 +1016,27 @@ def validate_annotation(an, var):
             return f(*args, **kwargs, **{var: payload})
         return wrapper
     return decorator
+
+
+def convert_references_to_openapi3(obj):
+    for key, val in obj.items():
+        if key == '$ref':
+            obj[key] = val.replace('definitions', 'components/schemas')
+
+        if isinstance(val, dict):
+            convert_references_to_openapi3(val)
+
+
+def convert_response_definitions_to_openapi3(response, media_types):
+    if 'schema' in response:
+        convert_references_to_openapi3(response['schema'])
+        if 'content' not in response:
+            response['content'] = {}
+            for media_type in media_types:
+                response['content'][media_type] = {'schema': dict(response['schema'])}
+        del response['schema']
+
+
+def convert_responses_to_openapi3(responses, media_types):
+    for val in responses.values():
+        convert_response_definitions_to_openapi3(val, media_types)

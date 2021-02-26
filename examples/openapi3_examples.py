@@ -3,8 +3,9 @@ Example using Marshmallow Schema and fields as definitions
 """
 # coding: utf-8
 from flask import Flask, jsonify, Response, request
+from marshmallow import fields
 
-from flasgger import Swagger, SwaggerView
+from flasgger import Swagger, SwaggerView, Schema, swag_from
 
 swagger_config = {
     "headers": [],
@@ -89,6 +90,10 @@ class Animals(SwaggerView):
         return Response(status=200)
 
 
+class Bird(Schema):
+    name = fields.String()
+
+
 app = Flask(__name__)
 swag = Swagger(app, config=swagger_config, merge=True)
 
@@ -97,6 +102,22 @@ app.add_url_rule(
     view_func=Animals.as_view('animals'),
     methods=['GET']
 )
+
+
+@app.route('/birds')
+@swag_from(
+    dict(
+        tags=['Birds'],
+        responses={
+            200: {
+                'schema': Bird
+            }
+        }
+    )
+)
+def birds():
+    return dict(name='eagle')
+
 
 if __name__ == "__main__":
     app.run(debug=True)

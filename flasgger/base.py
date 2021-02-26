@@ -42,6 +42,7 @@ from .utils import get_vendor_extension_fields
 from .utils import validate
 from .utils import LazyString
 from .utils import swag_annotation
+from .utils import convert_responses_to_openapi3
 from . import __version__
 
 
@@ -488,11 +489,11 @@ class Swagger(object):
                     operation['requestBody'] = request_body
                 if callbacks:
                     operation['callbacks'] = callbacks
-                if responses:
-                    operation['responses'] = responses
                 # parameters - swagger ui dislikes empty parameter lists
                 if len(params) > 0:
                     operation['parameters'] = params
+
+                media_types = ['application/json']
                 # other optionals
                 for key in optional_fields:
                     if key in swag:
@@ -501,7 +502,17 @@ class Swagger(object):
                             if not isinstance(value, (list, tuple)):
                                 value = [value]
 
+                            if key == 'produces':
+                                media_types = value
+
                         operation[key] = value
+
+                if responses:
+                    if is_openapi3():
+                        convert_responses_to_openapi3(responses, media_types)
+
+                    operation['responses'] = responses
+
                 operations[verb] = operation
 
             if len(operations):
@@ -538,6 +549,12 @@ class Swagger(object):
                         paths[srule][key].update(val)
                     else:
                         paths[srule][key] = val
+
+        if is_openapi3():
+            # Copy definitions to components/schemas
+            if definitions:
+                data.setdefault('components', {}).setdefault('schemas', {}).update(definitions)
+
         self.apispecs[endpoint] = data
         return data
 
