@@ -553,7 +553,9 @@ class Swagger(object):
         if is_openapi3():
             # Copy definitions to components/schemas
             if definitions:
-                data.setdefault('components', {}).setdefault('schemas', {}).update(definitions)
+                data.setdefault('components', {})\
+                    .setdefault('schemas', {})\
+                    .update(definitions)
 
         self.apispecs[endpoint] = data
         return data

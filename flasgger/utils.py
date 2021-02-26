@@ -1033,7 +1033,9 @@ def convert_response_definitions_to_openapi3(response, media_types):
         if 'content' not in response:
             response['content'] = {}
             for media_type in media_types:
-                response['content'][media_type] = {'schema': dict(response['schema'])}
+                response['content'][media_type] = {
+                    'schema': dict(response['schema'])
+                }
         del response['schema']
 
 
